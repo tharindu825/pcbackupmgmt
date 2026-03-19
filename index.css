@@ -467,12 +467,27 @@ body::before {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.65);
+  /* NOTE: backdrop-filter intentionally NOT set here — it would create a
+     CSS stacking context that traps native <select> dropdowns behind the
+     blur layer. The blur is applied via ::before instead. */
   z-index: 200;
   place-items: center;
 }
+
+/* Blur overlay as pseudo-element so it doesn't affect child stacking */
+.modal-backdrop::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+  z-index: -1;
+}
+
 .modal-open { display: grid !important; }
+
 
 .modal-box {
   background: var(--bg-surface);
@@ -544,6 +559,21 @@ body::before {
   background: rgba(99,102,241,0.04);
 }
 .form-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
+
+/* Select dropdowns need a solid bg — transparent breaks native option rendering */
+select.form-input {
+  background: #111827;
+  cursor: pointer;
+  appearance: auto;
+}
+select.form-input option {
+  background: #111827;
+  color: #f1f5f9;
+}
+select.form-input option:hover,
+select.form-input option:checked {
+  background: #1e293b;
+}
 
 .form-textarea { resize: vertical; min-height: 80px; }
 

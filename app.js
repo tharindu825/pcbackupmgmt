@@ -189,9 +189,9 @@ pcForm.addEventListener('submit', (e) => {
   render();
 });
 
-// Close modal on backdrop click
+// Close modal on backdrop click (but NOT when interacting with form elements inside)
 modal.addEventListener('click', (e) => {
-  if (e.target === modal) closeModal();
+  if (!e.target.closest('.modal-box')) closeModal();
 });
 
 // ─── Modal: Record Backup ────────────────────────────────────────────────────
@@ -231,7 +231,7 @@ window.confirmBackup = function () {
 };
 
 backupModalEl.addEventListener('click', (e) => {
-  if (e.target === backupModalEl) closeBackupModal();
+  if (!e.target.closest('.modal-box')) closeBackupModal();
 });
 
 // ─── Modal: View Backup Logs ─────────────────────────────────────────────────
@@ -287,7 +287,7 @@ window.deleteLogEntry = function (logId) {
 };
 
 logsModalEl.addEventListener('click', (e) => {
-  if (e.target === logsModalEl) closeLogsModal();
+  if (!e.target.closest('.modal-box')) closeLogsModal();
 });
 
 // ─── Delete ──────────────────────────────────────────────────────────────────
