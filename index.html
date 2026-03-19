@@ -146,26 +146,26 @@
         <div class="form-row">
           <div class="form-group">
             <label for="f-name">PC / Hostname *</label>
-            <input class="form-input" id="f-name" type="text" placeholder="e.g. DESKTOP-ACCOUNTS01" required />
+            <input class="form-input" id="f-name" name="name" type="text" placeholder="e.g. DESKTOP-ACCOUNTS01" required />
           </div>
           <div class="form-group">
             <label for="f-department">Department</label>
-            <input class="form-input" id="f-department" type="text" placeholder="e.g. Accounts" />
+            <input class="form-input" id="f-department" name="department" type="text" placeholder="e.g. Accounts" />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label for="f-ip">IP Address</label>
-            <input class="form-input" id="f-ip" type="text" placeholder="e.g. 192.168.1.10" />
+            <input class="form-input" id="f-ip" name="ipAddress" type="text" placeholder="e.g. 192.168.1.10" />
           </div>
           <div class="form-group">
             <label for="f-owner">Owner / User</label>
-            <input class="form-input" id="f-owner" type="text" placeholder="e.g. Nimal Perera" />
+            <input class="form-input" id="f-owner" name="owner" type="text" placeholder="e.g. Nimal Perera" />
           </div>
         </div>
         <div class="form-group">
           <label for="f-notes">Notes</label>
-          <textarea class="form-textarea" id="f-notes" placeholder="Optional notes about this PC…"></textarea>
+          <textarea class="form-textarea" id="f-notes" name="notes" placeholder="Optional notes about this PC…"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -186,53 +186,55 @@
       <h3>💾 Record Backup — <span id="backup-pc-name" style="color:var(--accent);"></span></h3>
       <button class="modal-close" onclick="closeBackupModal()" aria-label="Close">&times;</button>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="backup-date-picker">Backup Date *</label>
-          <input class="form-input" id="backup-date-picker" type="date" required />
+    <form id="backup-form" novalidate>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="backup-date-picker">Backup Date *</label>
+            <input class="form-input" id="backup-date-picker" name="date" type="date" required />
+          </div>
+          <div class="form-group">
+            <label for="backup-type">Backup Type</label>
+            <select class="form-input" id="backup-type" name="backupType">
+              <option value="Full">Full</option>
+              <option value="Incremental">Incremental</option>
+              <option value="Differential">Differential</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="backup-method">Method</label>
+            <select class="form-input" id="backup-method" name="method">
+              <option value="Manual">Manual</option>
+              <option value="Automated">Automated</option>
+              <option value="Cloud Sync">Cloud Sync</option>
+              <option value="External Drive">External Drive</option>
+              <option value="Network Share">Network Share</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="backup-size">Backup Size</label>
+            <input class="form-input" id="backup-size" name="size" type="text" placeholder="e.g. 45 GB" />
+          </div>
         </div>
         <div class="form-group">
-          <label for="backup-type">Backup Type</label>
-          <select class="form-input" id="backup-type">
-            <option value="Full">Full</option>
-            <option value="Incremental">Incremental</option>
-            <option value="Differential">Differential</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="backup-method">Method</label>
-          <select class="form-input" id="backup-method">
-            <option value="Manual">Manual</option>
-            <option value="Automated">Automated</option>
-            <option value="Cloud Sync">Cloud Sync</option>
-            <option value="External Drive">External Drive</option>
-            <option value="Network Share">Network Share</option>
-          </select>
+          <label for="backup-performed-by">Performed By</label>
+          <input class="form-input" id="backup-performed-by" name="performedBy" type="text" placeholder="e.g. Kamal Silva / IT Team" />
         </div>
         <div class="form-group">
-          <label for="backup-size">Backup Size</label>
-          <input class="form-input" id="backup-size" type="text" placeholder="e.g. 45 GB" />
+          <label for="backup-notes">Notes</label>
+          <textarea class="form-textarea" id="backup-notes" name="notes" placeholder="e.g. Completed successfully. All files verified." style="min-height:60px;"></textarea>
         </div>
       </div>
-      <div class="form-group">
-        <label for="backup-performed-by">Performed By</label>
-        <input class="form-input" id="backup-performed-by" type="text" placeholder="e.g. Kamal Silva / IT Team" />
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeBackupModal()">Cancel</button>
+        <button type="submit" class="btn btn-success" id="btn-save-backup-log">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Save Backup Log
+        </button>
       </div>
-      <div class="form-group">
-        <label for="backup-notes">Notes</label>
-        <textarea class="form-textarea" id="backup-notes" placeholder="e.g. Completed successfully. All files verified." style="min-height:60px;"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-ghost" onclick="closeBackupModal()">Cancel</button>
-      <button type="button" class="btn btn-success" id="btn-confirm-backup" onclick="confirmBackup()">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        Save Backup Log
-      </button>
-    </div>
+    </form>
   </div>
 </div>
 

@@ -27,6 +27,41 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/') urlPath = '/index.html';
 
   const filePath = path.join(ROOT, urlPath);
+  const dataPath = path.join(ROOT, 'data.json');
+
+  // Handle API: GET /api/data
+  if (req.method === 'GET' && urlPath === '/api/data') {
+    fs.readFile(dataPath, 'utf8', (err, data) => {
+      if (err) {
+        res.writeHead(500, MIME_TYPES['.json']);
+        res.end(JSON.stringify({ error: 'Failed to read data' }));
+        return;
+      }
+      res.writeHead(200, MIME_TYPES['.json']);
+      res.end(data);
+    });
+    return;
+  }
+
+  // Handle API: POST /api/data
+  if (req.method === 'POST' && urlPath === '/api/data') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        JSON.parse(body); // Validate JSON
+        fs.writeFile(dataPath, body, 'utf8', (err) => {
+          if (err) throw err;
+          res.writeHead(200, MIME_TYPES['.json']);
+          res.end(JSON.stringify({ success: true }));
+        });
+      } catch (e) {
+        res.writeHead(400, MIME_TYPES['.json']);
+        res.end(JSON.stringify({ error: 'Invalid JSON data' }));
+      }
+    });
+    return;
+  }
 
   // Security: prevent path traversal outside ROOT
   if (!filePath.startsWith(ROOT)) {

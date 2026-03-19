@@ -3,9 +3,9 @@
  */
 
 import {
-  getAll, addPC, updatePC, removePC, recordBackup,
-  getLogsForPC, deleteLog,
-  daysSinceBackup, isOverdue, seedDemoData, OVERDUE_DAYS
+  initData, getAll, addPC, updatePC, removePC, recordBackup,
+  getLogsForPC, getAllLogs, deleteLog,
+  daysSinceBackup, isOverdue, OVERDUE_DAYS
 } from './data.js';
 
 import {
@@ -166,28 +166,26 @@ window.closeModal = function () {
   editingId = null;
 };
 
-pcForm.addEventListener('submit', (e) => {
+window.savePC = async function (e) {
   e.preventDefault();
-  const data = {
-    name:       document.getElementById('f-name').value.trim(),
-    department: document.getElementById('f-department').value.trim(),
-    ipAddress:  document.getElementById('f-ip').value.trim(),
-    owner:      document.getElementById('f-owner').value.trim(),
-    notes:      document.getElementById('f-notes').value.trim(),
-  };
+  const fd = new FormData(pcForm);
+  const data = Object.fromEntries(fd.entries());
+
   if (!data.name) return;
 
   if (editingId) {
-    updatePC(editingId, data);
+    await updatePC(editingId, data);
     showToast(`✏️ <strong>${data.name}</strong> updated successfully.`, 'info', 3000);
   } else {
-    addPC(data);
+    await addPC(data);
     showToast(`✅ <strong>${data.name}</strong> added to the system.`, 'success', 3000);
   }
 
   closeModal();
   render();
-});
+};
+
+pcForm.addEventListener('submit', window.savePC);
 
 // Close modal on backdrop click (but NOT when interacting with form elements inside)
 modal.addEventListener('click', (e) => {
@@ -213,22 +211,21 @@ window.closeBackupModal = function () {
   backupTargetId = null;
 };
 
-window.confirmBackup = function () {
+window.saveBackupLog = async function (e) {
+  e.preventDefault();
+  const fd = new FormData(document.getElementById('backup-form'));
+  const logData = Object.fromEntries(fd.entries());
+
   if (!backupTargetId) return;
   const pc = getAll().find(p => p.id === backupTargetId);
-  const logData = {
-    date:        document.getElementById('backup-date-picker').value,
-    backupType:  document.getElementById('backup-type').value,
-    method:      document.getElementById('backup-method').value,
-    size:        document.getElementById('backup-size').value.trim(),
-    performedBy: document.getElementById('backup-performed-by').value.trim(),
-    notes:       document.getElementById('backup-notes').value.trim(),
-  };
-  recordBackup(backupTargetId, logData);
+
+  await recordBackup(backupTargetId, logData);
   showToast(`💾 Backup logged for <strong>${pc?.name}</strong>`, 'success', 4000);
   closeBackupModal();
   render();
 };
+
+document.getElementById('backup-form').addEventListener('submit', window.saveBackupLog);
 
 backupModalEl.addEventListener('click', (e) => {
   if (!e.target.closest('.modal-box')) closeBackupModal();
@@ -239,7 +236,7 @@ window.openLogsModal = function (id) {
   logsTargetId = id;
   const pc = getAll().find(p => p.id === id);
   logsModalTitle.textContent = `📋 Backup Log — ${pc?.name || ''}`;
-  renderLogs();
+  renderLogs(id);
   logsModalEl.classList.add('modal-open');
 };
 
@@ -269,7 +266,7 @@ function renderLogs() {
       <td>${escHtml(log.performedBy) || '<em class="text-muted">—</em>'}</td>
       <td class="log-notes">${escHtml(log.notes) || '<em class="text-muted">—</em>'}</td>
       <td>
-        <button class="btn btn-delete" onclick="deleteLogEntry('${log.id}')" title="Delete this log entry" style="padding:4px 8px;">
+        <button class="btn btn-delete" onclick="confirmDeleteLog('${log.id}')" title="Delete this log entry" style="padding:4px 8px;">
           <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
         </button>
       </td>
@@ -278,11 +275,12 @@ function renderLogs() {
   });
 }
 
-window.deleteLogEntry = function (logId) {
+window.confirmDeleteLog = async function (logId) {
   if (!confirm('Delete this log entry?')) return;
-  deleteLog(logId);
+  await deleteLog(logId);
+  if (reportModalEl.classList.contains('modal-open')) renderReport();
   renderLogs();
-  render(); // refresh last-backup date if needed
+  render();
   showToast('🗑 Log entry deleted.', 'warning', 2500);
 };
 
@@ -291,10 +289,10 @@ logsModalEl.addEventListener('click', (e) => {
 });
 
 // ─── Delete ──────────────────────────────────────────────────────────────────
-window.deletePC = function (id) {
+window.deletePC = async function (id) {
   const pc = getAll().find(p => p.id === id);
   if (!confirm(`Delete "${pc?.name}"? This cannot be undone.`)) return;
-  removePC(id);
+  await removePC(id);
   showToast(`🗑 <strong>${pc?.name}</strong> removed.`, 'warning', 3000);
   render();
 };
@@ -611,9 +609,9 @@ window.exportReportCSV = function () {
 };
 
 // ─── Boot ────────────────────────────────────────────────────────────────────
-function boot() {
+async function boot() {
   initToastContainer();
-  seedDemoData();
+  await initData();
   render();
   // Check for overdue PCs and notify
   checkAndNotifyOverdue();
