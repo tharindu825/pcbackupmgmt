@@ -666,7 +666,133 @@ select.form-input option:checked {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
+/* ── Report Modal ─────────────────────────────────────────── */
+.report-modal-box {
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+.report-modal-box .modal-body { flex: 1; overflow-y: auto; }
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.report-month-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.report-month-wrap label { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); }
+#report-month { width: 160px; }
+
+.report-body { gap: 0; padding: 0; }
+.report-section { padding: 24px; border-bottom: 1px solid var(--border); }
+.report-section:last-child { border-bottom: none; }
+.report-section-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Risk Pills ───────────────────────────────────────────── */
+.risk-pills {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.risk-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+.risk-pill strong { font-size: 1.4rem; font-weight: 700; margin-left: 6px; }
+
+.risk-pill-high   { background: var(--danger-dim);  border-color: var(--danger-border); color: var(--danger);  }
+.risk-pill-medium { background: var(--warning-dim); border-color: rgba(245,158,11,0.3); color: var(--warning); }
+.risk-pill-low    { background: var(--ok-dim);      border-color: var(--ok-border);     color: var(--ok);      }
+
+/* ── Risk Table Badges ────────────────────────────────────── */
+.risk-high-badge   { background: var(--danger-dim);  color: var(--danger);  border: 1px solid var(--danger-border); }
+.risk-medium-badge { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+.risk-low-badge    { background: var(--ok-dim);      color: var(--ok);      border: 1px solid var(--ok-border); }
+
+.risk-advice { font-size: 0.78rem; color: var(--text-secondary); }
+.days-medium { color: var(--warning); font-weight: 600; font-family: var(--font-mono); font-size: 0.82rem; }
+.font-mono   { font-family: var(--font-mono); font-size: 0.80rem; }
+.risk-table td { vertical-align: middle; }
+
+/* ── Bar Chart ────────────────────────────────────────────── */
+.chart-meta {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.chart-meta strong { color: var(--text-primary); }
+
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-label {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.bar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 99px;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  min-width: 4px;
+}
+
+.bar-low    { background: linear-gradient(90deg, var(--ok),      #34d399); }
+.bar-medium { background: linear-gradient(90deg, var(--warning),  #fbbf24); }
+.bar-high   { background: linear-gradient(90deg, var(--danger),  #f87171); }
+.bar-zero   { background: rgba(255,255,255,0.08); min-width: 0; width: 0 !important; }
+
+.bar-count {
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
   .header { padding: 14px 16px; }
   .main   { padding: 16px; }

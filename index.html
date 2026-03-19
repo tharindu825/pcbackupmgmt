@@ -25,6 +25,10 @@
         <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Refresh
       </button>
+      <button class="btn btn-ghost" onclick="openReportModal()" title="Monthly backup report" id="btn-report">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </button>
       <button class="btn btn-ghost" onclick="exportCSV()" title="Export report as CSV">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export CSV
@@ -267,6 +271,80 @@
   </div>
 </div>
 
+
+<!-- ════════════════════════ MODAL: Monthly Report ════════════════════ -->
+<div class="modal-backdrop" id="report-modal" role="dialog" aria-modal="true">
+  <div class="modal-box report-modal-box">
+
+    <div class="modal-header">
+      <h3>📊 Monthly Backup Report</h3>
+      <button class="modal-close" onclick="closeReportModal()" aria-label="Close">&times;</button>
+    </div>
+
+    <!-- Month Picker + Export -->
+    <div class="report-toolbar">
+      <div class="report-month-wrap">
+        <label for="report-month">Month</label>
+        <input class="form-input" id="report-month" type="month" />
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-ghost" onclick="changeReportMonth(-1)">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Prev
+        </button>
+        <button class="btn btn-ghost" onclick="changeReportMonth(1)">
+          Next <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn btn-ghost" onclick="exportReportCSV()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body report-body">
+
+      <!-- ── Risk Summary ── -->
+      <section class="report-section">
+        <h4 class="report-section-title">🛡 Risk Assessment — All PCs</h4>
+        <div id="report-risk-summary"></div>
+      </section>
+
+      <!-- ── Monthly Backup Frequency ── -->
+      <section class="report-section">
+        <h4 class="report-section-title" id="report-activity-title">📅 Backup Activity</h4>
+        <div id="report-bar-chart"></div>
+      </section>
+
+      <!-- ── Activity Log Table ── -->
+      <section class="report-section">
+        <h4 class="report-section-title">📋 Backup Log for Month</h4>
+        <div id="report-log-empty" style="display:none; color:var(--text-muted); padding:20px 0; text-align:center;">No backups recorded this month.</div>
+        <div style="overflow-x:auto;">
+          <table class="pc-table" id="report-log-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>PC Name</th>
+                <th>Department</th>
+                <th>Type</th>
+                <th>Method</th>
+                <th>Size</th>
+                <th>Performed By</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="report-log-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div><!-- /report-body -->
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeReportModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════ SCRIPTS ════════════════════════════ -->
 <script type="module" src="app.js"></script>
