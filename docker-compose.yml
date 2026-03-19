@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  pcbackupmgmt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pcbackupmgmt:latest
+    container_name: pc-backup-manager
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      - PORT=8787
+      - NODE_ENV=production

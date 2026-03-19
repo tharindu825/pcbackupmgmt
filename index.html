@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PC Backup Management System</title>
+  <meta name="description" content="Track and manage PC backup dates across your organisation. Get alerts for PCs that haven't been backed up in over two weeks." />
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="logo-icon">💾</div>
+      <div>
+        <h1>PC Backup Manager</h1>
+        <p>Track &amp; monitor organisation backups</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="header-time">Last refreshed: <span id="last-refreshed">—</span></span>
+      <button class="btn btn-ghost" onclick="refreshDashboard()" title="Refresh dashboard">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-ghost" onclick="exportCSV()" title="Export report as CSV">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+      <button class="btn btn-primary" onclick="openAddModal()" id="btn-add-pc">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add PC
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════ MAIN ═════════════════════════════ -->
+  <main class="main">
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">🖥</div>
+        <div class="stat-info">
+          <label>Total PCs</label>
+          <div class="stat-value stat-value-blue" id="stat-total">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-green">✅</div>
+        <div class="stat-info">
+          <label>Backup OK</label>
+          <div class="stat-value stat-value-green" id="stat-ok">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-red">⚠️</div>
+        <div class="stat-info">
+          <label>Overdue (&gt;14 days)</label>
+          <div class="stat-value stat-value-red" id="stat-overdue">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-yellow">❓</div>
+        <div class="stat-info">
+          <label>Never Backed Up</label>
+          <div class="stat-value stat-value-yellow" id="stat-never">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            class="search-input"
+            id="search-input"
+            type="text"
+            placeholder="Search PC, department, IP, owner…"
+          />
+        </div>
+        <select class="filter-select" id="filter-status">
+          <option value="all">All PCs</option>
+          <option value="ok">✓ Backup OK</option>
+          <option value="overdue">⚠ Overdue Only</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PC Table -->
+    <div class="table-container">
+      <div class="table-header">
+        <h2>📋 PC Backup Status</h2>
+        <div class="overdue-alert-strip" id="overdue-strip">
+          🔴 Red rows require immediate backup attention
+        </div>
+      </div>
+
+      <div id="empty-state" style="display:none;">
+        <div class="empty-icon">🖥</div>
+        <p>No PCs found. Click <strong>Add PC</strong> to get started.</p>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="pc-table" id="pc-table">
+          <thead>
+            <tr>
+              <th>PC Name / Owner</th>
+              <th>Department</th>
+              <th>IP Address</th>
+              <th>Last Backup</th>
+              <th>Days Since</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pc-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+</div><!-- /wrapper -->
+
+<!-- ═══════════════════════════ TOAST CONTAINER ════════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════ MODAL: Add / Edit PC ═══════════════════ -->
+<div class="modal-backdrop" id="pc-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Add New PC</h3>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    </div>
+    <form id="pc-form" novalidate>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-name">PC / Hostname *</label>
+            <input class="form-input" id="f-name" type="text" placeholder="e.g. DESKTOP-ACCOUNTS01" required />
+          </div>
+          <div class="form-group">
+            <label for="f-department">Department</label>
+            <input class="form-input" id="f-department" type="text" placeholder="e.g. Accounts" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-ip">IP Address</label>
+            <input class="form-input" id="f-ip" type="text" placeholder="e.g. 192.168.1.10" />
+          </div>
+          <div class="form-group">
+            <label for="f-owner">Owner / User</label>
+            <input class="form-input" id="f-owner" type="text" placeholder="e.g. Nimal Perera" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="f-notes">Notes</label>
+          <textarea class="form-textarea" id="f-notes" placeholder="Optional notes about this PC…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-pc">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save PC
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MODAL: Record Backup ══════════════════ -->
+<div class="modal-backdrop" id="backup-modal" role="dialog" aria-modal="true">
+  <div class="modal-box backup-modal-box">
+    <div class="modal-header">
+      <h3>💾 Record Backup — <span id="backup-pc-name" style="color:var(--accent);"></span></h3>
+      <button class="modal-close" onclick="closeBackupModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="backup-date-picker">Backup Date *</label>
+          <input class="form-input" id="backup-date-picker" type="date" required />
+        </div>
+        <div class="form-group">
+          <label for="backup-type">Backup Type</label>
+          <select class="form-input" id="backup-type">
+            <option value="Full">Full</option>
+            <option value="Incremental">Incremental</option>
+            <option value="Differential">Differential</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="backup-method">Method</label>
+          <select class="form-input" id="backup-method">
+            <option value="Manual">Manual</option>
+            <option value="Automated">Automated</option>
+            <option value="Cloud Sync">Cloud Sync</option>
+            <option value="External Drive">External Drive</option>
+            <option value="Network Share">Network Share</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="backup-size">Backup Size</label>
+          <input class="form-input" id="backup-size" type="text" placeholder="e.g. 45 GB" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="backup-performed-by">Performed By</label>
+        <input class="form-input" id="backup-performed-by" type="text" placeholder="e.g. Kamal Silva / IT Team" />
+      </div>
+      <div class="form-group">
+        <label for="backup-notes">Notes</label>
+        <textarea class="form-textarea" id="backup-notes" placeholder="e.g. Completed successfully. All files verified." style="min-height:60px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeBackupModal()">Cancel</button>
+      <button type="button" class="btn btn-success" id="btn-confirm-backup" onclick="confirmBackup()">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Backup Log
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL: Backup Log History ════════════════════ -->
+<div class="modal-backdrop" id="logs-modal" role="dialog" aria-modal="true">
+  <div class="modal-box logs-modal-box">
+    <div class="modal-header">
+      <h3 id="logs-modal-title">📋 Backup Log</h3>
+      <button class="modal-close" onclick="closeLogsModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div id="logs-empty" style="display:none; flex-direction:column; align-items:center; padding:40px 24px; gap:12px; color:var(--text-muted);">
+        <div style="font-size:40px; opacity:0.4;">📋</div>
+        <p>No backup logs yet. Click <strong>💾 Backup</strong> to record the first one.</p>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="pc-table logs-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Method</th>
+              <th>Size</th>
+              <th>Performed By</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeLogsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ SCRIPTS ════════════════════════════ -->
+<script type="module" src="app.js"></script>
+</body>
+</html>

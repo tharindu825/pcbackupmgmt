@@ -1,0 +1,11 @@
+{
+  "name": "pcbackupmgmt",
+  "version": "1.0.0",
+  "description": "PC Backup Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {}
+}
