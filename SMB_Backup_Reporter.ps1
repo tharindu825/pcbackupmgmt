@@ -81,5 +81,3 @@ foreach ($pcName in $PCBackupPaths.Keys) {
 }
 
 Write-Host "Done."
-Write-Host ""
-Read-Host "Press Enter to close this window..."
