@@ -45,14 +45,41 @@ Open your browser at: **http://localhost:8787**
 ## 🐳 Docker Deployment (Ubuntu/Linux)
 
 ```bash
-# Build and start with Docker Compose
-docker-compose up -d
+# Build and start both the app and the backup cron service
+docker compose up -d --build
 
-# Stop
-docker-compose down
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f
+
+# Stop (data is safe — stored in named volume + ./backups/ on host)
+docker compose down
 ```
 
 The app will be available on port `8787` of your server.
+
+### 🔄 Auto-Backup
+
+A **backup sidecar container** (`pc-backup-cron`) runs automatically alongside the app:
+
+- Backs up `data.json` **every hour** to `./backups/data_YYYYMMDD_HHMMSS.json` on the host
+- The `./backups/` folder is **bind-mounted to your server** — survives even `docker compose down -v`
+- Deletes backups **older than 30 days** automatically
+
+### ↩️ Restore from Backup
+
+```bash
+# Restore from the most recent backup
+docker exec pc-backup-manager sh /app/restore.sh
+
+# Restore from a specific backup file
+docker exec pc-backup-manager sh /app/restore.sh data_20260321_120000.json
+
+# List all available backups
+ls ./backups/
+```
 
 ---
 
@@ -67,8 +94,11 @@ pcbackupmgmt/
 ├── notifications.js    # Toast alerts and browser notifications
 ├── server.js           # Node.js static file server + /api/data REST endpoints
 ├── data.json           # 📦 The "database" — all PCs and backup logs stored here
+├── backup.sh           # 🔄 Auto-backup script (runs every hour in Docker)
+├── restore.sh          # ↩️  Restore data.json from a backup
 ├── Dockerfile          # Docker image definition
-├── docker-compose.yml  # Docker Compose service config
+├── docker-compose.yml  # Docker Compose: app + backup cron sidecar
+├── backups/            # 📂 Host-mounted backup folder (auto-created)
 └── README.md           # This file
 ```
 
@@ -125,9 +155,10 @@ All other routes serve static files from the project directory.
 
 ## ⚙️ Configuration
 
-| Variable   | Default | Description              |
-|------------|---------|--------------------------|
-| `PORT`     | `8787`  | Port the server listens on |
+| Variable    | Default          | Description                                |
+|-------------|------------------|--------------------------------------------|
+| `PORT`      | `8787`           | Port the server listens on                 |
+| `DATA_FILE` | `./data.json`    | Path to the data file (set by Docker)      |
 
 ---
 

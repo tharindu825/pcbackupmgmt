@@ -9,6 +9,9 @@ const path  = require('path');
 
 const PORT    = process.env.PORT || 8787;
 const ROOT    = __dirname;
+// In Docker, DATA_FILE=/data/data.json  (mounted volume)
+// In local dev, falls back to ./data.json in the project folder
+const DATA_FILE = process.env.DATA_FILE || path.join(ROOT, 'data.json');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -27,11 +30,11 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/') urlPath = '/index.html';
 
   const filePath = path.join(ROOT, urlPath);
-  const dataPath = path.join(ROOT, 'data.json');
+  // DATA_FILE: /data/data.json in Docker (mounted volume), ./data.json in local dev
 
   // Handle API: GET /api/data
   if (req.method === 'GET' && urlPath === '/api/data') {
-    fs.readFile(dataPath, 'utf8', (err, data) => {
+    fs.readFile(DATA_FILE, 'utf8', (err, data) => {
       if (err) {
         res.writeHead(500, MIME_TYPES['.json']);
         res.end(JSON.stringify({ error: 'Failed to read data' }));
@@ -50,7 +53,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         JSON.parse(body); // Validate JSON
-        fs.writeFile(dataPath, body, 'utf8', (err) => {
+        fs.writeFile(DATA_FILE, body, 'utf8', (err) => {
           if (err) throw err;
           res.writeHead(200, MIME_TYPES['.json']);
           res.end(JSON.stringify({ success: true }));

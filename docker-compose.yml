@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # ─── Main Application ──────────────────────────────────────────────
   pcbackupmgmt:
     build:
       context: .
@@ -13,3 +14,47 @@ services:
     environment:
       - PORT=8787
       - NODE_ENV=production
+      - DATA_FILE=/data/data.json
+    volumes:
+      # Named volume for the live data.json — survives container restarts
+      - pc_backup_data:/data
+      # Bind mount the backups folder to the HOST so backups survive "docker compose down -v"
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8787/api/data"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ─── Backup Sidecar ────────────────────────────────────────────────
+  # Runs every hour and saves a timestamped copy of data.json to ./backups/
+  # Backups are stored on the HOST so they survive even "docker compose down -v"
+  backup:
+    image: alpine:3.19
+    container_name: pc-backup-cron
+    restart: unless-stopped
+    volumes:
+      # Shared named volume — reads live data.json
+      - pc_backup_data:/data:ro
+      # Bind mount the backups folder to the HOST
+      - ./backups:/backups
+      # Mount the backup script
+      - ./backup.sh:/backup.sh:ro
+    # Set up a cron job: run backup every hour at minute 0
+    # Logs are written to /var/log/backup.log inside the container
+    command: >
+      sh -c "
+        echo 'Starting backup cron service...' &&
+        mkdir -p /backups &&
+        chmod +x /backup.sh &&
+        echo '0 * * * * /backup.sh >> /var/log/backup.log 2>&1' | crontab - &&
+        /backup.sh &&
+        crond -f -l 8
+      "
+    depends_on:
+      - pcbackupmgmt
+
+volumes:
+  pc_backup_data:
+    driver: local

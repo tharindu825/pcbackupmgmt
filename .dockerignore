@@ -17,3 +17,6 @@ node_modules/
 .vscode/
 .idea/
 *.swp
+
+# Backup files (stored on the host, not in the image)
+backups/
