@@ -41,7 +41,7 @@ try {
         }
         
         $json = $payload | ConvertTo-Json
-        $response = Invoke-RestMethod -Uri "http://$ServerIP:$ServerPort/api/auto-log" -Method Post -Body $json -ContentType "application/json"
+        $response = Invoke-RestMethod -Uri "http://${ServerIP}:${ServerPort}/api/auto-log" -Method Post -Body $json -ContentType "application/json"
         
         Write-Host "Success: Sent backup log for $PCName. Server responded:"
         $response | Out-Default

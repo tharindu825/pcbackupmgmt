@@ -58,7 +58,7 @@ foreach ($pcName in $PCBackupPaths.Keys) {
                 
                 $json = $payload | ConvertTo-Json
                 try {
-                    $response = Invoke-RestMethod -Uri "http://$ServerIP:$ServerPort/api/auto-log" -Method Post -Body $json -ContentType "application/json"
+                    $response = Invoke-RestMethod -Uri "http://${ServerIP}:${ServerPort}/api/auto-log" -Method Post -Body $json -ContentType "application/json"
                     Write-Host "[OK] $pcName logged successfully ($sizeStr)."
                 } catch {
                     Write-Host "[ERROR] Failed to send log for $pcName to API."
