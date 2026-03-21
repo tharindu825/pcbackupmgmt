@@ -19,10 +19,11 @@ $ServerPort = "8787"
 # ── Configuration ────────────────────────────────────────────────────────
 
 # Map the exact 'PC Name' as seen in your web dashboard to its full Backup Share Path
+# NOTE: Since you are running this ON the server holding the files, use the local drive letter (e.g., D:\ or E:\)
 $PCBackupPaths = @{
-    "CTP2403" = "\\192.168.1.116\PCBackups\CTP2403\CTP2403\CTP2403_FULLBackup"
-    "DESKTOP-ACCOUNTS-01" = "\\192.168.1.116\PCBackups\DESKTOP-ACCOUNTS-01"
-    "WORKSTATION-DESIGN-01" = "\\192.168.1.116\PCBackups\WORKSTATION-DESIGN-01"
+    "CTP2403" = "D:\PCBackups\CTP2403\CTP2403\CTP2403_FULLBackup"
+#    "DESKTOP-ACCOUNTS-01" = "D:\PCBackups\DESKTOP-ACCOUNTS-01"
+#    "WORKSTATION-DESIGN-01" = "D:\PCBackups\WORKSTATION-DESIGN-01"
     # Add your other Windows 10/11 PCs and their paths here...
 }
 
@@ -58,10 +59,15 @@ foreach ($pcName in $PCBackupPaths.Keys) {
                 
                 $json = $payload | ConvertTo-Json
                 try {
-                    $response = Invoke-RestMethod -Uri "http://${ServerIP}:${ServerPort}/api/auto-log" -Method Post -Body $json -ContentType "application/json"
+                    $response = Invoke-RestMethod -Uri "http://${ServerIP}:${ServerPort}/api/auto-log" -Method Post -Body $json -ContentType "application/json" -ErrorAction Stop
                     Write-Host "[OK] $pcName logged successfully ($sizeStr)."
                 } catch {
                     Write-Host "[ERROR] Failed to send log for $pcName to API."
+                    Write-Host "↳ API replied with: $($_.Exception.Message)"
+                    
+                    if ($_.ErrorDetails) {
+                        Write-Host "↳ Body: $($_.ErrorDetails.Message)"
+                    }
                 }
             } else {
                 Write-Host "[OVERDUE] $pcName hasn't backed up recently. Last file: $lastWrite"

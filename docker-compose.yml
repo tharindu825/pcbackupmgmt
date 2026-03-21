@@ -20,6 +20,8 @@ services:
       - pc_backup_data:/data
       # Bind mount the backups folder to the HOST so backups survive "docker compose down -v"
       - ./backups:/backups
+      # Hot reload server.js
+      - ./server.js:/app/server.js
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:8787/api/data', (r) => {if (r.statusCode !== 200) process.exit(1) });"]
       interval: 30s
