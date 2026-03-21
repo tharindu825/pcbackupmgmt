@@ -107,10 +107,13 @@ export async function recordBackup(id, logData) {
 /** Returns number of days since last backup (null if no backup recorded) */
 export function daysSinceBackup(pc) {
   if (!pc.lastBackupDate) return null;
-  const last = new Date(pc.lastBackupDate);
+  // Parse the stored date as a local calendar date (avoid UTC timezone mismatch)
+  const [year, month, day] = pc.lastBackupDate.split('-').map(Number);
+  const last = new Date(year, month - 1, day);   // local midnight
   const now  = new Date();
-  const diffTime = Math.abs(now - last);
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight today
+  const diffTime = todayLocal - last;
+  return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 }
 
 /** Overdue if > OVERDUE_DAYS or never backed up */
