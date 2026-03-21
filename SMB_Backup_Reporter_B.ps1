@@ -10,28 +10,31 @@
 
 .SETUP
   1. Set $ServerIP to point to your Ubuntu Docker server.
-  2. Configure $PCBackupPaths to map the "PC Name" on the dashboard to its Full SMB Path.
+  2. Configure $BackupSharePath to point to the root backup folder.
+  3. Configure $PCFolders to map folder names to their matching "PC Name" on the dashboard.
 #>
 
 $ServerIP = "192.168.1.8"
 $ServerPort = "8787"
 
 # ── Configuration ────────────────────────────────────────────────────────
+# The base path where the Windows 10/11 Hasleo backups are saved
+$BackupSharePath = "D:\Shares\HasleoBackups" 
 
-# Map the exact 'PC Name' as seen in your web dashboard to its full Backup Share Path
-$PCBackupPaths = @{
-    "CTP2403" = "\\192.168.1.116\PCBackups\CTP2403\CTP2403\CTP2403_FULLBackup"
-    "DESKTOP-ACCOUNTS-01" = "\\192.168.1.116\PCBackups\DESKTOP-ACCOUNTS-01"
-    "WORKSTATION-DESIGN-01" = "\\192.168.1.116\PCBackups\WORKSTATION-DESIGN-01"
-    # Add your other Windows 10/11 PCs and their paths here...
+# Map the folder names in the share to the exact 'PC Name' as seen in your web dashboard
+$PCFolders = @{
+    "Desktop-Accounts" = "DESKTOP-ACCOUNTS-01"
+    "Workstation-Design" = "WORKSTATION-DESIGN-01"
+    "HR-Laptop" = "LAPTOP-HR-MANAGER"
 }
 
 # ──────────────────────────────────────────────────────────────────────────
 
-Write-Host "Checking SMB backup shares..."
+Write-Host "Checking backups in $BackupSharePath..."
 
-foreach ($pcName in $PCBackupPaths.Keys) {
-    $folderPath = $PCBackupPaths[$pcName]
+foreach ($folderName in $PCFolders.Keys) {
+    $pcName = $PCFolders[$folderName]
+    $folderPath = Join-Path $BackupSharePath $folderName
     
     if (Test-Path $folderPath) {
         # Find the most recently modified file in the PC's backup folder
@@ -40,7 +43,7 @@ foreach ($pcName in $PCBackupPaths.Keys) {
         if ($latestFile) {
             $lastWrite = $latestFile.LastWriteTime
             
-            # If the file was modified in the last 48 hours, the backup succeeded!
+            # If the file was modified in the last 24 hours, the backup succeeded!
             if ($lastWrite -ge (Get-Date).AddHours(-48)) {
                 
                 # Format size as human readable MB/GB
@@ -50,7 +53,7 @@ foreach ($pcName in $PCBackupPaths.Keys) {
                 $payload = @{
                     pcName = $pcName
                     backupDate = $lastWrite.ToString("yyyy-MM-dd")
-                    backupType = "Full"
+                    backupType = "Incremental"
                     method = "Hasleo Free Backup (SMB)"
                     size = $sizeStr
                     notes = "Automated file check. Latest file: $($latestFile.Name)"
@@ -61,7 +64,7 @@ foreach ($pcName in $PCBackupPaths.Keys) {
                     $response = Invoke-RestMethod -Uri "http://$ServerIP:$ServerPort/api/auto-log" -Method Post -Body $json -ContentType "application/json"
                     Write-Host "[OK] $pcName logged successfully ($sizeStr)."
                 } catch {
-                    Write-Host "[ERROR] Failed to send log for $pcName to API."
+                    Write-Host "[ERROR] Failed to send log for $pcName API."
                 }
             } else {
                 Write-Host "[OVERDUE] $pcName hasn't backed up recently. Last file: $lastWrite"
@@ -75,5 +78,3 @@ foreach ($pcName in $PCBackupPaths.Keys) {
 }
 
 Write-Host "Done."
-Write-Host ""
-Read-Host "Press Enter to close this window..."
