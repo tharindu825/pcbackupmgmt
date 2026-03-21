@@ -96,6 +96,8 @@ pcbackupmgmt/
 ├── data.json           # 📦 The "database" — all PCs and backup logs stored here
 ├── backup.sh           # 🔄 Auto-backup script (runs every hour in Docker)
 ├── restore.sh          # ↩️  Restore data.json from a backup
+├── WSB_Reporter.ps1    # 🤖 Auto-reporter for Windows Server Backup
+├── SMB_Backup_Reporter.ps1 # 🤖 Auto-reporter for Hasleo backups on SMB share
 ├── Dockerfile          # Docker image definition
 ├── docker-compose.yml  # Docker Compose: app + backup cron sidecar
 ├── backups/            # 📂 Host-mounted backup folder (auto-created)
@@ -120,12 +122,30 @@ pcbackupmgmt/
 
 The Node.js server exposes two simple REST endpoints:
 
-| Method | Endpoint    | Description                        |
-|--------|-------------|------------------------------------|
-| `GET`  | `/api/data` | Returns the full contents of `data.json` |
-| `POST` | `/api/data` | Saves the request body JSON to `data.json` |
+| Method | Endpoint        | Description                        |
+|--------|-----------------|------------------------------------|
+| `GET`  | `/api/data`     | Returns the full contents of `data.json` |
+| `POST` | `/api/data`     | Saves the request body JSON to `data.json` |
+| `POST` | `/api/auto-log` | Auto-records a backup log (used by PowerShell scripts) |
 
 All other routes serve static files from the project directory.
+
+---
+
+## 🤖 Automated Integration
+
+You can fully automate the green/red status on the dashboard using the included PowerShell scripts. Run these scripts daily using **Windows Task Scheduler**.
+
+### 1. Windows Server Backup (WSB)
+For your servers running built-in WSB, copy **`WSB_Reporter.ps1`** to the server.
+- The script uses `Get-WBSummary` to check if a backup succeeded in the last 24 hours.
+- If successful, it automatically POSTs a log to the dashboard.
+
+### 2. Windows 10/11 PCs (Hasleo Free / SMB Share)
+For PCs backing up to your Windows Server 2016 SMB share, copy **`SMB_Backup_Reporter.ps1`** to the 2016 Server.
+- Edit the `$BackupSharePath` and `$PCFolders` mapping inside the script.
+- The script will scan the share for recently modified backup files.
+- It automatically logs a successful backup to the dashboard for any PC that has fresh files.
 
 ---
 

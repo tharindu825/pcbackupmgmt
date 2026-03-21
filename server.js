@@ -66,6 +66,65 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Handle API: POST /api/auto-log
+  if (req.method === 'POST' && urlPath === '/api/auto-log') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        
+        fs.readFile(DATA_FILE, 'utf8', (err, dataStr) => {
+          if (err) throw err;
+          const data = JSON.parse(dataStr);
+          
+          // Find target PC (case-insensitive by name or IP)
+          const searchName = (payload.pcName || '').toLowerCase();
+          const targetPC = data.pcs.find(p => 
+            p.name.toLowerCase() === searchName || 
+            (p.ipAddress && p.ipAddress === searchName)
+          );
+
+          if (!targetPC) {
+            res.writeHead(404, MIME_TYPES['.json']);
+            res.end(JSON.stringify({ error: `PC not found: ${payload.pcName}` }));
+            return;
+          }
+
+          // Create new log entry
+          const today = new Date().toISOString().split('T')[0];
+          const newLog = {
+            id: 'log_' + Date.now() + Math.floor(Math.random() * 1000),
+            pcId: targetPC.id,
+            date: payload.backupDate || today,
+            backupType: payload.backupType || 'System',
+            method: payload.method || 'Automated',
+            size: payload.size || '',
+            performedBy: 'System Automation',
+            notes: payload.notes || 'Automated backup verification'
+          };
+
+          // Update PC last backup date
+          targetPC.lastBackupDate = newLog.date;
+
+          // Save back to data.json
+          data.logs.push(newLog);
+          fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf8', (writeErr) => {
+            if (writeErr) throw writeErr;
+            res.writeHead(200, MIME_TYPES['.json']);
+            res.end(JSON.stringify({ success: true, logId: newLog.id, pc: targetPC.name }));
+          });
+        });
+
+      } catch (e) {
+        res.writeHead(400, MIME_TYPES['.json']);
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      }
+    });
+    return;
+  }
+
+
   // Security: prevent path traversal outside ROOT
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403);
