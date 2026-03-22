@@ -26,10 +26,10 @@ try {
     # we completely bypass completely everything and ask the native command-line tool.
     Write-Host "Querying wbadmin.exe directly for recent Windows Server Backups..."
     
-    $wbOut = wbadmin get versions -last 1
+    $wbOut = wbadmin get versions
     
     # We look for the "Backup time: 3/21/2026 9:00 PM" line in the console output
-    $backupLine = $wbOut | Select-String "Backup time:" | Select-Object -First 1
+    $backupLine = $wbOut | Select-String "Backup time:" | Select-Object -Last 1
     
     if ($backupLine) {
         $dateStr = $backupLine.ToString().Replace("Backup time:","").Trim()
