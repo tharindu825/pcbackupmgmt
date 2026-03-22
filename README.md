@@ -60,13 +60,10 @@ docker compose down
 
 The app will be available on port `8787` of your server.
 
-### 🔄 Auto-Backup
+### 🔄 Auto-Backup & Hot Reload
 
-A **backup sidecar container** (`pc-backup-cron`) runs automatically alongside the app:
-
-- Backs up `data.json` **every hour** to `./backups/data_YYYYMMDD_HHMMSS.json` on the host
-- The `./backups/` folder is **bind-mounted to your server** — survives even `docker compose down -v`
-- Deletes backups **older than 30 days** automatically
+- A **backup sidecar container** (`pc-backup-cron`) runs automatically alongside the app, backing up `data.json` every hour to the host's `./backups` folder.
+- The `server.js` file is **bind-mounted** directly into the API container. Any changes you make to `server.js` on the host will be instantly applied when the container is restarted (`docker compose restart pcbackupmgmt`), completely bypassing the need to rebuild the Docker image!
 
 ### ↩️ Restore from Backup
 
@@ -138,14 +135,15 @@ You can fully automate the green/red status on the dashboard using the included 
 
 ### 1. Windows Server Backup (WSB)
 For your servers running built-in WSB, copy **`WSB_Reporter.ps1`** to the server.
-- The script uses `Get-WBSummary` to check if a backup succeeded in the last 24 hours.
-- If successful, it automatically POSTs a log to the dashboard.
+- The script natively runs the `wbadmin.exe` console application to check if a backup succeeded in the last 48 hours.
+- It completely bypasses corrupted/missing PowerShell modules or Event Viewer logs, ensuring bulletproof compatibility.
+- If successful, it automatically POSTs a log to the dashboard using the Server's exact Computer Name.
 
-### 2. Windows 10/11 PCs (Hasleo Free / SMB Share)
-For PCs backing up to your Windows Server 2016 SMB share, copy **`SMB_Backup_Reporter.ps1`** to the 2016 Server.
-- Edit the `$BackupSharePath` and `$PCFolders` mapping inside the script.
-- The script will scan the share for recently modified backup files.
-- It automatically logs a successful backup to the dashboard for any PC that has fresh files.
+### 2. Windows 10/11 PCs (Hasleo Free)
+For PCs backing up over the network to a central Storage Server, copy **`SMB_Backup_Reporter.ps1`** directly to the Storage Server.
+- Edit the `$PCBackupPaths` map inside the script to point to the **Local Drive letter** (e.g., `D:\PCBackups\...`) where the files are stored.
+- *Note:* Do not use `\\192.168...` network UNC paths inside the script to avoid Windows loopback security restrictions.
+- The script will scan the local hard drive for recently modified `.pbd` or backup files and automatically log successes to the API.
 
 ---
 
